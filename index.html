@@ -5,14 +5,61 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>نِكسا — سوقك ومهاراتك ومجتمعك</title>
 <meta name="description" content="نِكسا: منصة اجتماعية تتيح لك إنشاء حساب، فتح متجرك الخاص، ونشر طلبات الوظائف والخدمات." />
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  #nexa-error-box { display:none; direction:rtl; font-family: sans-serif; padding: 20px; background: #fff3f0; color: #7a1f1f; border: 2px solid #d33; margin: 16px; border-radius: 10px; white-space: pre-wrap; line-height:1.6; font-size: 14px; }
+  #nexa-loading { display:flex; align-items:center; justify-content:center; height: 100vh; font-family: sans-serif; color:#103B36; font-size: 16px; text-align:center; padding: 0 20px; direction: rtl; }
+</style>
 </head>
 <body>
+<div id="nexa-loading">جارِ تحميل نِكسا...</div>
+<div id="nexa-error-box"></div>
+
+<script>
+  function nexaShowError(msg) {
+    var box = document.getElementById('nexa-error-box');
+    var loading = document.getElementById('nexa-loading');
+    if (loading) loading.style.display = 'none';
+    if (box) {
+      box.style.display = 'block';
+      box.textContent = msg;
+    }
+  }
+  window.addEventListener('error', function(e) {
+    nexaShowError('حدث خطأ أثناء تحميل التطبيق:\n\n' + (e.message || e) + '\n\nالملف: ' + (e.filename || '-') + '\nالسطر: ' + (e.lineno || '-'));
+  });
+  window.addEventListener('unhandledrejection', function(e) {
+    nexaShowError('خطأ غير متوقع:\n\n' + (e.reason ? (e.reason.message || e.reason) : 'unknown'));
+  });
+</script>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" onerror="nexaShowError('تعذّر تحميل مكتبة React من الإنترنت.\n\nالسبب المرجّح: شبكتك أو متصفحك يحظر الوصول لموقع unpkg.com (وهو المصدر الذي يجلب منه التطبيق بعض الأدوات).\n\nالحل المقترح:\n- جرّب فتح الرابط من شبكة إنترنت أو واي فاي مختلف\n- جرّب متصفح آخر (Chrome أو Firefox)\n- تأكد من عدم تفعيل أي VPN أو أداة حظر إعلانات قوية')"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" onerror="nexaShowError('تعذّر تحميل مكتبة React-DOM من الإنترنت.\n\nنفس سبب React أعلاه: الوصول لموقع unpkg.com محظور من شبكتك أو متصفحك.\n\nجرّب شبكة أو متصفحًا آخر.')"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js" onerror="nexaShowError('تعذّر تحميل مكتبة Babel من الإنترنت (مصدرها unpkg.com).\n\nجرّب شبكة أو متصفحًا آخر.')"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="nexaShowError('تعذّر تحميل مكتبة Supabase من الإنترنت (مصدرها cdn.jsdelivr.net).\n\nجرّب شبكة أو متصفحًا آخر.')"></script>
+
+<script>
+  // فحص احتياطي: إذا لم تُحمَّل المكتبات الأساسية بعد 8 ثوانٍ، أظهر رسالة واضحة
+  setTimeout(function() {
+    var missing = [];
+    if (typeof React === 'undefined') missing.push('React');
+    if (typeof ReactDOM === 'undefined') missing.push('ReactDOM');
+    if (typeof Babel === 'undefined') missing.push('Babel');
+    if (typeof supabase === 'undefined') missing.push('Supabase');
+    if (missing.length > 0) {
+      nexaShowError(
+        'لم يكتمل تحميل التطبيق.\n\n' +
+        'المكتبات التي لم تُحمَّل: ' + missing.join('، ') + '\n\n' +
+        'السبب الأرجح: اتصال الإنترنت غير مستقر، أو شبكتك تحظر بعض المواقع المستخدمة (unpkg.com أو cdn.jsdelivr.net).\n\n' +
+        'جرّب:\n- التأكد من اتصال الإنترنت\n- تغيير الشبكة (واي فاي إلى بيانات الجوال أو العكس)\n- تجربة متصفح آخر\n- إعادة فتح الصفحة بعد دقيقة'
+      );
+    }
+  }, 8000);
+</script>
+
 <div id="root"></div>
 <script type="text/babel" data-presets="react">
+try {
+
 const { useState, useEffect, useCallback, useRef } = React;
 const { createClient } = supabase;
 const supabaseClient = createClient("https://ipgsmcihydhxuqwvvjbe.supabase.co", "sb_publishable_h9_zOxVSuJKl5VU5EYi-Aw_cSUPC7Pq");
@@ -2518,6 +2565,12 @@ function HelpModal({ onClose }) {
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<NexaApp />);
+const loadingEl = document.getElementById("nexa-loading");
+if (loadingEl) loadingEl.style.display = "none";
+
+} catch (err) {
+  nexaShowError('خطأ داخلي في كود التطبيق:\n\n' + (err && err.message ? err.message : err) + (err && err.stack ? ('\n\n' + err.stack) : ''));
+}
 </script>
 </body>
 </html>
